@@ -7,6 +7,8 @@
  
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 class BirthdayViewController: UIViewController {
     
@@ -65,14 +67,18 @@ class BirthdayViewController: UIViewController {
     }()
   
     let nextButton = PointButton(title: "가입하기")
-    
+
+    private let viewModel = BirthdayViewModel()
+    private let disposeBag = DisposeBag()
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         view.backgroundColor = Color.white
         
         configureLayout()
-        
+        bind()
+
         nextButton.addTarget(self, action: #selector(nextButtonClicked), for: .touchUpInside)
     }
     
@@ -80,7 +86,35 @@ class BirthdayViewController: UIViewController {
         print("가입완료")
     }
 
-    
+    func bind() {
+        // Output
+
+        viewModel.yearData
+            .map { "\($0)년" }
+            .bind(to: yearLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        viewModel.monthData
+            .map { "\($0)월" }
+            .bind(to: monthLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        viewModel.dayData
+            .map { "\($0)일" }
+            .bind(to: dayLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        // Input
+
+        // bind: RxCocoa 컴포넌트가 구독할 경우 캡쳐 보장
+        // 하지만 RxCocoa가 아니라면 캡쳐 해야함
+        birthDayPicker.rx.date
+            .bind(with: self) { owner, value in
+                owner.viewModel.birthDayDate.onNext(value)
+            }
+            .disposed(by: disposeBag)
+    }
+
     func configureLayout() {
         view.addSubview(infoLabel)
         view.addSubview(containerStackView)
