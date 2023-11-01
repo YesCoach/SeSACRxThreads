@@ -16,6 +16,8 @@ final class BirthdayViewModel {
 
     let birthDayDate: BehaviorSubject<Date> = BehaviorSubject(value: .now)
 
+    let isValidDate: BehaviorSubject<Bool> = BehaviorSubject(value: false)
+
     private let disposeBag = DisposeBag()
 
     init() {
@@ -24,18 +26,21 @@ final class BirthdayViewModel {
 
     private func bind() {
         birthDayDate
-            .map {
-                Calendar.current
-                    .dateComponents(
-                        [.year, .month, .day],
-                        from: $0
-                    )
+            .map { Calendar.current.dateComponents([.year], from: $0, to: .now) }
+            .map { ($0.year ?? 0) >= 17 }
+            .subscribe(with: self) { owner, value in
+                owner.isValidDate.onNext(value)
             }
+            .disposed(by: disposeBag)
+
+        birthDayDate
+            .map { Calendar.current.dateComponents([.year, .month, .day], from: $0) }
             .subscribe(with: self) { owner, value in
                 guard let year = value.year,
                       let month = value.month,
                       let day = value.day
                 else { return }
+
                 owner.yearData.onNext(year)
                 owner.monthData.onNext(month)
                 owner.dayData.onNext(day)

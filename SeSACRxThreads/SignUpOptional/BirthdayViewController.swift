@@ -84,6 +84,7 @@ class BirthdayViewController: UIViewController {
     
     @objc func nextButtonClicked() {
         print("가입완료")
+        navigationController?.popToRootViewController(animated: true)
     }
 
     func bind() {
@@ -102,6 +103,10 @@ class BirthdayViewController: UIViewController {
         viewModel.dayData
             .map { "\($0)일" }
             .bind(to: dayLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        viewModel.isValidDate
+            .bind(to: nextButton.rx.isEnabled)
             .disposed(by: disposeBag)
 
         // Input
